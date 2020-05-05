@@ -14,7 +14,7 @@
             "name": "Python: Poisson",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/1/poisson.py"
+            "program": "${workspaceFolder}/dft/poisson.py"
         },
         {
             "name": "Python: Attach",
