@@ -26,7 +26,8 @@ phi = op.cI(op.Linv(-4 * np.pi * op.O( op.cJ(n) )))
 # by taking the real part.
 phi = np.real(phi)
 
-Unum = (0.5 * np.real(np.dot(op.cJ(phi).conj().T, op.O(op.cJ(n)))))[0, 0]
+# Unum = (0.5 * np.real(np.dot(op.cJ(phi).conj().T, op.O(op.cJ(n)))))[0, 0]
+Unum = (0.5 * np.dot(phi.T, n)[0]) * (np.linalg.det(global_vars.R) / np.prod(global_vars.S)) 
 Uanal=((1 / sigma1 + 1 / sigma2) / 2 - np.sqrt(2) / np.sqrt(sigma1 ** 2 + sigma2 ** 2)) / np.sqrt(np.pi)
 res_deviation = np.abs(Unum - Uanal)
 print('Deviation between numerical and analytical results is {:.4f}'.format(res_deviation))
