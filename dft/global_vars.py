@@ -2,6 +2,11 @@ import numpy as np
 
 
 def get_meshgrid(nx, ny, nz):
+    '''
+    @return (mesh_real, mesh_recip)
+    @return mesh_real of shape (nx * ny * nz, 3), sample points in real space
+    @return mesh_recip of shape (nx * ny * nz, 3), sample points in reciprocal space
+    '''
     n = nx * ny * nz
     mesh_real = np.zeros((n, 3), dtype = np.int)
     mesh_recip = np.zeros((n, 3), dtype = np.int)
@@ -16,7 +21,7 @@ def get_meshgrid(nx, ny, nz):
 
 S = np.array([30, 30, 30])  # sample grid
 M, N = get_meshgrid(*S)  # M: sample grid points in real space; N: sample grid points in reciprocal space
-R = np.diag(np.array([6, 6, 6]))  # lattice params. x axis is the 0th col, y axis is the 1st col
+R = np.diag(np.array([6, 6, 6]))  # lattice params. each col represent one lattice vector. x axis is the 0th col, y axis is the 1st col
 r = np.dot( np.dot(M, np.diag( 1 / S )), R.T)  # sample points in lattice
 G = 2 * np.pi * np.dot(N, np.linalg.inv(R))  # sample points in reciprocal lattice
 G2 = np.sum(G ** 2, axis = 1).reshape(-1, 1)

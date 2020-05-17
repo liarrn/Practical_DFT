@@ -56,7 +56,7 @@ def cI(w):
     @return
         out: cI operator applied to in
     '''
-    w3 = w.reshape(global_vars.S[0], global_vars.S[1], global_vars.S[2])
+    w3 = w.reshape(global_vars.S[2], global_vars.S[1], global_vars.S[0])   # (#. z_grid, #. y_grid, #. x_grid)
     # ref: https://docs.scipy.org/doc/numpy/reference/routines.fft.html
     p3 = np.fft.fftn(w3)  # by numpy's default the fftn is not normalized
     return p3.ravel().reshape(-1, 1)
@@ -71,7 +71,7 @@ def cJ(p):
     @return
         out:  cJ operator applied to in, where cJ≡cI −1
     '''
-    p3 = p.reshape(global_vars.S[0], global_vars.S[1], global_vars.S[2])
+    p3 = p.reshape(global_vars.S[2], global_vars.S[1], global_vars.S[0])  # (#. z_grid, #. y_grid, #. x_grid)
     # ref: https://docs.scipy.org/doc/numpy/reference/routines.fft.html
     w3 = np.fft.ifftn(p3)  # by numpy's default the ifftn is normalized by 1/N
     return w3.ravel().reshape(-1, 1)

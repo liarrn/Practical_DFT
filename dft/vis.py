@@ -13,16 +13,16 @@ def slice(dat, plane, idx):
         plane: 'xy', 'yz', 'xz'
         idx: plane index
     '''
-    plane2idx = {'yz': 0, 'xz': 1, 'xy': 2}
+    plane2idx = {'yz': 2, 'xz': 1, 'xy': 0}
     assert len(dat.shape) == 3
     assert plane in plane2idx
     assert idx >= 0 and idx < dat.shape[plane2idx[plane]]
     if plane == 'yz':
-        dat_slice = dat[idx, :, :]
+        dat_slice = dat[:, :, idx]
     elif plane == 'xz':
         dat_slice = dat[:, idx, :]
     else:
-        dat_slice = dat[:, :, idx]
+        dat_slice = dat[idx, :, :]
     dat_slice = np.squeeze(dat_slice)
     x, y = np.meshgrid(np.arange(dat_slice.shape[1]), np.arange(dat_slice.shape[0]))
     fig = plt.figure()

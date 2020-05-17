@@ -16,7 +16,7 @@ n  = np.real(n)
 net_charge = sum_over_cell(n)
 print('net charge is {:.4f}'.format(net_charge))
 
-vis.slice(n.reshape(global_vars.S[0], global_vars.S[1], global_vars.S[2]), 'yz', global_vars.S[2] // 2)
+vis.slice(n.reshape(global_vars.S[2], global_vars.S[1], global_vars.S[0]), 'xy', global_vars.S[2] // 2)
 
 
 
