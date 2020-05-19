@@ -120,6 +120,16 @@ def cJdag(p):
         w[:, i] = w3.ravel()
     return w
 
+def diagouter(a, b):
+    '''
+    diag (a * b†)
+    @input
+        a, b are matrix of shape (S0 * S1 * S2, Ns)
+    @return
+        diag (a * b†), column vector of length S0 * S1 * S2
+    '''
+    return np.sum(a * b.conj(), axis=1)
+
 def test_cI():
     w = np.random.rand(np.prod(global_vars.S), 1)
     w_prime = cJ(cI(w))
@@ -135,8 +145,16 @@ def test_cIdag():
     y = np.dot(b.conj().T, cJdag(a))  # (b(dag)J(dag)a)
     assert x - y < 1e-5, 'ERROR in cJdag'
 
+def test_diagouter():
+    a = np.random.rand(np.prod(global_vars.S), 3)
+    b = np.random.rand(np.prod(global_vars.S), 3)
+    out_ref = np.diag(np.dot(a, b.conj().T))
+    out_prime = diagouter(a, b)
+    assert np.sum(np.abs(out_ref - out_prime)) < 1e-6, 'ERROR in diagouter'
+
 if __name__ == '__main__':
-    test_cI()
-    test_cIdag()
+    # test_cI()
+    # test_cIdag()
+    test_diagouter()
 
 
