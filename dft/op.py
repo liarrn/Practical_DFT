@@ -126,9 +126,9 @@ def diagouter(a, b):
     @input
         a, b are matrix of shape (S0 * S1 * S2, Ns)
     @return
-        diag (a * b†), column vector of length S0 * S1 * S2
+        diag (a * b†), column vector of length (S0 * S1 * S2, 1)
     '''
-    return np.sum(a * b.conj(), axis=1)
+    return np.sum(a * b.conj(), axis=1).reshape(-1, 1)
 
 def test_cI():
     w = np.random.rand(np.prod(global_vars.S), 1)
@@ -148,7 +148,7 @@ def test_cIdag():
 def test_diagouter():
     a = np.random.rand(np.prod(global_vars.S), 3)
     b = np.random.rand(np.prod(global_vars.S), 3)
-    out_ref = np.diag(np.dot(a, b.conj().T))
+    out_ref = np.diag(np.dot(a, b.conj().T)).reshape(-1, 1)
     out_prime = diagouter(a, b)
     assert np.sum(np.abs(out_ref - out_prime)) < 1e-6, 'ERROR in diagouter'
 
