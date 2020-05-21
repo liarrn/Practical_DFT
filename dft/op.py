@@ -122,13 +122,24 @@ def cJdag(p):
 
 def diagouter(a, b):
     '''
-    diag (a * b†)
+    diag (a dot b†)
     @input
         a, b are matrix of shape (S0 * S1 * S2, Ns)
     @return
         diag (a * b†), column vector of length (S0 * S1 * S2, 1)
     '''
     return np.sum(a * b.conj(), axis=1).reshape(-1, 1)
+
+def diagprod(a, b):
+    '''
+    Diag(a) dot b
+    @input
+        a: (n, 1) column vector
+        b: (n, m) matrix
+    @return
+        out: (n, m) matrix
+    '''
+    return a * b
 
 def test_cI():
     w = np.random.rand(np.prod(global_vars.S), 1)
