@@ -19,7 +19,7 @@ def get_meshgrid(nx, ny, nz):
         mesh_recip[i, 2] = mesh_real[i, 2] - nz if mesh_real[i, 2] > nz / 2 else mesh_real[i, 2]
     return mesh_real, mesh_recip
 
-S = np.array([30, 30, 30])  # sample grid
+S = np.array([30, 30, 30])  # sample grid (#. x, #. y, #. z)
 M, N = get_meshgrid(*S)  # M: sample grid points in real space; N: sample grid points in reciprocal space
 R = np.diag(np.array([6, 6, 6]))  # lattice params. each col represent one lattice vector. x axis is the 0th col, y axis is the 1st col
 r = np.dot( np.dot(M, np.diag( 1 / S )), R.T)  # sample points in lattice
