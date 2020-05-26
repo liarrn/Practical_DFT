@@ -141,6 +141,20 @@ def diagprod(a, b):
     '''
     return a * b
 
+def poisson(n, real_phi = False):
+    '''
+    Solving poisson equation. Calculate electrostatic potential from electron density
+    @input
+        n: electron density sampled at real space, column vector of shape (S0 * S1 * S2, 1)
+        real_psi: if return phi (electrostatic potential) in real space or frequency (basis) space
+    @return
+        psi
+    '''
+    phi = Linv(-4 * np.pi * O( cJ(n) ))
+    if real_phi:
+        phi = np.real(cI(phi))
+    return phi
+
 def test_cI():
     w = np.random.rand(np.prod(global_vars.S), 1)
     w_prime = cJ(cI(w))

@@ -27,7 +27,9 @@ def getE(W):
     n = op.diagouter(np.dot(W_real, U_inv), W_real)
     E_potential = np.dot(gb_Vdual.T, n)
     E_kinetic = -0.5 * np.trace(np.dot(W.conj().T, op.L(np.dot(W, U_inv))))
-    E = (E_potential + E_kinetic)[0, 0]
+    phi = op.poisson(n, real_phi = False)  # electrostatic potential (phi) in freqency space
+    E_hartree = 0.5 * np.dot(n.conj().T, op.cJdag(op.O(phi)))
+    E = (E_potential + E_kinetic + E_hartree)[0, 0]
     E = E.real
     return E
 
@@ -219,6 +221,6 @@ if __name__ == "__main__":
     # test()
     # test_orthonormalizeW()
     # test_sd()
-    # test_getE()
+    test_getE()
     # test_getPsi()
-    test_all()
+    # test_all()
