@@ -10,6 +10,49 @@ dr = np.sqrt(np.sum((global_vars.r - lattice_center) ** 2, axis = 1))
 V = 2 * (dr ** 2)
 gb_Vdual = op.cJdag(op.O(op.cJ(V)))
 
+def excVWN(n):
+    '''
+    VWN parameterization of the exchange correlation energy
+    '''
+    # Constants
+    X1 = 0.75 * (3.0 / (2.0 * np.pi)) ** (2.0 / 3.0)
+    A = 0.0310907
+    x0 = -0.10498
+    b = 3.72744
+    c = 12.9352
+    Q = np.sqrt(4 * c - b * b)
+    X0 = x0 * x0 + b * x0 + c
+
+    rs = (4 * np.pi / 3 * n ) ** (-1/3)  # Added internal conversion to rs
+    x = np.sqrt(rs)
+    X = x * x + b * x + c
+    out = -1 * X1 / rs + A * (np.log(x * x / X) + 2 * b / Q * np.arctan(Q / (2 * x + b)) - (b * x0) / X0 * \
+                     (np.log((x - x0)*(x - x0) / X) + 2 * (2 * x0 + b) / Q * np.arctan(Q / (2 * x + b))))
+    return out
+
+def excpVWN(n):
+    '''
+    d/dn deriv of VWN parameterization of the exchange correlation energy
+    '''
+    # Constants
+    X1 = 0.75 * (3.0 / (2.0 * np.pi)) ** (2.0 / 3.0)
+    A = 0.0310907
+    x0 = -0.10498
+    b = 3.72744
+    c = 12.9352
+    Q = np.sqrt(4 * c - b * b)
+    X0 = x0 * x0 + b * x0 + c
+
+    rs = (4 * np.pi / 3 * n ) ** (-1/3)  # Added internal conversion to rs
+    x = np.sqrt(rs)
+    X = x * x + b * x + c
+
+    dx = 0.5 / x  # Chain rule needs dx/drho!
+    out = dx * (2 * X1 / (rs * x) + A * (2 / x - (2 * x + b) / X - 4 *b / (Q * Q + (2 * x + b) * (2 * x + b)) \
+        -(b * x0) / X0 * (2 / (x - x0) - (2 * x + b) / X - 4 * (2 * x0 + b) / (Q * Q + (2 * x + b) * (2 * x + b)))))
+    out = (-1 * rs / (3 * n)) * out  # Added d(rs)/dn from chain rule from rs to n conv
+    return out
+
 def getE(W):
     '''
     get the energy from expansion coefficients for Ns unconstrained wave function
@@ -21,15 +64,20 @@ def getE(W):
     @return:
         E: Energies summed over Ns states
     '''
+    f = 2
     U = np.dot(W.conj().T, op.O(W))
     U_inv = np.linalg.inv(U)
     W_real = op.cI(W)  # each col of W_real represents W's value in sampled real space
-    n = op.diagouter(np.dot(W_real, U_inv), W_real)
+    n = f * op.diagouter(np.dot(W_real, U_inv), W_real)
     E_potential = np.dot(gb_Vdual.T, n)
     E_kinetic = -0.5 * np.trace(np.dot(W.conj().T, op.L(np.dot(W, U_inv))))
     phi = op.poisson(n, real_phi = False)  # electrostatic potential (phi) in freqency space
-    E_hartree = 0.5 * np.dot(n.conj().T, op.cJdag(op.O(phi)))
-    E = (E_potential + E_kinetic + E_hartree)[0, 0]
+    # E_hartree = 0.5 * np.dot(n.conj().T, op.cJdag(op.O(phi)))
+    E_hartree = 0.5 * np.dot(op.cJ(n).conj().T, op.O(phi))
+    exc = excVWN(n)
+    # the Exc is negative here, which seems problematic.
+    Exc = np.dot(op.cJ(n).conj().T, op.O(op.cJ(exc)))
+    E = (E_potential + E_kinetic + E_hartree + Exc)[0, 0]
     E = E.real
     return E
 
@@ -86,50 +134,6 @@ def sd(W, niter):
         e = getE(W)
         print(out_str.format(i + 1, e))
     return W
-    
-
-def excVWN(n):
-    '''
-    VWN parameterization of the exchange correlation energy
-    '''
-    # Constants
-    X1 = 0.75 * (3.0 / (2.0 * np.pi)) ** (2.0 / 3.0)
-    A = 0.0310907
-    x0 = -0.10498
-    b = 3.72744
-    c = 12.9352
-    Q = np.sqrt(4 * c - b * b)
-    X0 = x0 * x0 + b * x0 + c
-
-    rs = (4 * np.pi / 3 * n ) ** (-1/3)  # Added internal conversion to rs
-    x = np.sqrt(rs)
-    X = x * x + b * x + c
-    out = -1 * X1 / rs + A * (np.log(x * x / X) + 2 * b / Q * np.atan(Q / (2 * x + b)) - (b * x0) / X0 * \
-                     (np.log((x - x0)*(x - x0) / X) + 2 * (2 * x0 + b) / Q * np.atan(Q / (2 * x + b))))
-    return out
-
-def excpVWN(n):
-    '''
-    d/dn deriv of VWN parameterization of the exchange correlation energy
-    '''
-    # Constants
-    X1 = 0.75 * (3.0 / (2.0 * np.pi)) ** (2.0 / 3.0)
-    A = 0.0310907
-    x0 = -0.10498
-    b = 3.72744
-    c = 12.9352
-    Q = np.sqrt(4 * c - b * b)
-    X0 = x0 * x0 + b * x0 + c
-
-    rs = (4 * np.pi / 3 * n ) ** (-1/3)  # Added internal conversion to rs
-    x = np.sqrt(rs)
-    X = x * x + b * x + c
-
-    dx = 0.5 / x  # Chain rule needs dx/drho!
-    out = dx * (2 * X1 / (rs * x) + A * (2 / x - (2 * x + b) / X - 4 *b / (Q * Q + (2 * x + b) * (2 * x + b)) \
-        -(b * x0) / X0 * (2 / (x - x0) - (2 * x + b) / X - 4 * (2 * x0 + b) / (Q * Q + (2 * x + b) * (2 * x + b)))))
-    out = (-1 * rs / (3 * n)) * out  # Added d(rs)/dn from chain rule from rs to n conv
-    return out
 
 def getPsi(W):
     '''
