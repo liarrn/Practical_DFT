@@ -160,6 +160,80 @@ def sd(W, niter):
         print(out_str.format(i + 1, e))
     return W
 
+def matdot(a, b):
+    '''
+    unravel matrix a, b as column vectors, and get their dot product
+    It's easy to verify that the dot product equals re(trace(a.conj().T, b))
+    '''
+    return np.trace(np.dot(a.conj().T, b)).real
+
+def K(w):
+    '''
+    Preconditioner for conjuncated-gradient optimization
+    Here the K = Diag(1/1+G2).
+    KW equals apply 1/1+G2 to each row of W
+    @input
+        w: Fourier weights of shape (S0 * S1 * S2, Ns)
+    @global variables
+        G2: lengths squared of G vectors
+    @return
+        K dot W
+    '''
+    k = 1 / (1 + global_vars.G2)
+    return k * w
+
+def pclm(W, niter):
+    '''
+    perform preconditioned line minimization for niter iterations to minimize e
+    '''
+    alpha_t = 3e-5
+    e = getE(W)
+    out_str = 'iteration: {:3d}, energy: {:.6f}, angle cosin: {:.3f}'
+    print(out_str.format(0, e, 0))
+    d = None  # search direction from last step
+    for i in range(niter):
+        g = getgrad(W)
+        if i > 0:
+            # angle test
+            cos = matdot(g, d) / (np.linalg.norm(g) * np.linalg.norm(d))
+        else:
+            cos = 0
+        d = -K(g)  # search direction is opposite of gradient
+        gt = getgrad(W + alpha_t * d)
+        alpha = alpha_t * matdot(g, d) / matdot(g - gt, d)
+        W += alpha * d
+        e = getE(W)
+        print(out_str.format(i + 1, e, cos))
+    return W
+
+def pccg(W, niter):
+    '''
+    perform preconditioned conjugate gradient for niter iterations to minimize e
+    1, precondition
+    2, line minimizaton/line search
+    3, conjugate gradient
+    '''
+    alpha_t = 3e-5
+    e = getE(W)
+    out_str = 'iteration: {:3d}, energy: {:.6f}'
+    print(out_str.format(0, e, 0))
+    d0 = None  # search direction from last step
+    g0 = None  # gradient from last step
+    for i in range(niter):
+        g = getgrad(W)
+        if i == 0:
+            beta = 0
+            d0 = 0
+        else:
+            beta = matdot(g, K(g)) / matdot(g0, K(g0))
+        d = -K(g) + beta * d0  # search direction is opposite of gradient
+        g0, d0 = g, d
+        gt = getgrad(W + alpha_t * d)
+        alpha = alpha_t * matdot(g, d) / matdot(g - gt, d)
+        W += alpha * d
+        e = getE(W)
+        print(out_str.format(i + 1, e))
+    return W
 
 def getPsi(W):
     '''
@@ -248,6 +322,15 @@ def test_sd():
     W = orthonormalizeW(W)
     sd(W, 200)
 
+def test_lm():
+    ns = 4
+    W = np.random.rand(np.prod(global_vars.S), ns) + 1j * \
+        np.random.rand(np.prod(global_vars.S), ns)
+    W = orthonormalizeW(W)
+    sd(W, 20) # use sd in first steps to get to near the minimum
+    W = orthonormalizeW(W)
+    pccg(W, 200)
+
 
 def test_sqrtm():
     a = np.random.rand(4, 4)
@@ -272,7 +355,8 @@ if __name__ == "__main__":
     # test_getgrad()
     # test()
     # test_orthonormalizeW()
-    test_sd()
+    # test_sd()
     # test_getE()
     # test_getPsi()
     # test_all()
+    test_lm()
